@@ -1,0 +1,67 @@
+name: Image Patch
+
+on:
+  repository_dispatch:
+    types: [ stackrox_copa ]
+
+env:
+  REGISTRY: ghcr.io/igorgolm
+
+jobs:
+  image_patch:
+    name: image_patch
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Write payload.json
+      shell: bash
+      run: |
+        cat > payload.json <<'JSON'
+        ${{ toJson(github.event.client_payload) }}
+        JSON
+        echo "payload.json:" && cat payload.json
+
+
+    - name: Extract image from payload
+      id: extract
+      shell: bash
+      run: |
+        IMAGE=$(jq -r '.image // .alert.image.name // .alert.deployment.containers[0].image.name // .alert.deployment.containers[0].image // empty' payload.json)
+        if [ -z "$IMAGE" ]; then
+          echo "No image found in payload" >&2
+          exit 1
+        fi
+        echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+        echo "Extracted image: $IMAGE"
+
+    - name: Generate Trivy Report
+      uses: aquasecurity/trivy-action@0.33.1
+      with:
+        scan-type: "image"
+        format: "json"
+        output: "report.json"
+        ignore-unfixed: true
+        vuln-type: "os"
+        image-ref: ${{ env.IMAGE }}
+
+    # check whether there are any OS package vulnerabilities
+    - name: Check vulnerability count
+      id: vuln_count
+      run: |
+        report_file="report.json"
+        vuln_count=$(jq 'if .Results then [.Results[] | select(.Class=="os-pkgs" and .Vulnerabilities!=null) | .Vulnerabilities[]] | length else 0 end' "$report_file")
+        echo "vuln_count=$vuln_count" >> $GITHUB_OUTPUT
+
+    - name: Run Copacetic patch
+      id: copa
+      uses: project-copacetic/copa-action@v1.2.1
+      with:
+        image: ${{ env.IMAGE }}
+        image-report: "report.json"
+        patched-tag: "${{ env.IMAGE }}-patched-${{ github.run_number }}"
+
+    - name: Push patched image
+      if: steps.copa.conclusion == 'success'
+      run: |
+        docker tag ${{ steps.copa.outputs.patched-image }} ${{ env.REGISTRY }}/aws-cd-georgia-demo-app:${{ steps.copa.outputs.patched-image }}
+        docker push ${{ env.REGISTRY }}/aws-cd-georgia-demo-app:${{ steps.copa.outputs.patched-image }}
