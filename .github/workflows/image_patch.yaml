@@ -11,6 +11,9 @@ jobs:
   image_patch:
     name: image_patch
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
     - name: Write payload.json
@@ -26,13 +29,25 @@ jobs:
       id: extract
       shell: bash
       run: |
-        IMAGE=$(jq -r '.image // .alert.image.name // .alert.deployment.containers[0].image.name // .alert.deployment.containers[0].image // empty' payload.json)
+        IMAGE=$(jq -r '
+          .image
+          // .alert.alert.deployment.containers[0].image.name.fullName
+          // .alert.deployment.containers[0].image.name.fullName
+          // .alert.image.name.fullName
+          // empty' payload.json)
         if [ -z "$IMAGE" ]; then
           echo "No image found in payload" >&2
           exit 1
         fi
         echo "IMAGE=$IMAGE" >> $GITHUB_ENV
         echo "Extracted image: $IMAGE"
+
+    - name: Log in to the Container registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Generate Trivy Report
       uses: aquasecurity/trivy-action@0.33.1
@@ -63,5 +78,4 @@ jobs:
     - name: Push patched image
       if: steps.copa.conclusion == 'success'
       run: |
-        docker tag ${{ steps.copa.outputs.patched-image }} ${{ env.REGISTRY }}/aws-cd-georgia-demo-app:${{ steps.copa.outputs.patched-image }}
-        docker push ${{ env.REGISTRY }}/aws-cd-georgia-demo-app:${{ steps.copa.outputs.patched-image }}
+        docker push ${{ steps.copa.outputs.patched-image }}
