@@ -73,7 +73,7 @@ jobs:
       with:
         image: ${{ env.IMAGE }}
         image-report: "report.json"
-        patched-tag: "${{ env.IMAGE }}-patched-${{ github.run_number }}"
+        patched-tag: "patched-${{ github.run_number }}"
         timeout: "20m"
 
     - name: Push patched image
