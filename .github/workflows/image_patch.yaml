@@ -8,9 +8,9 @@ env:
   REGISTRY: ghcr.io/igorgolm
 
 jobs:
-  image_patch:
+  image_patch_amd64:
     name: image_patch
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
@@ -24,7 +24,6 @@ jobs:
         JSON
         echo "payload.json:" && cat payload.json
 
-
     - name: Extract image from payload
       id: extract
       shell: bash
@@ -34,6 +33,12 @@ jobs:
           // .alert.alert.deployment.containers[0].image.name.fullName
           // .alert.deployment.containers[0].image.name.fullName
           // .alert.image.name.fullName
+          // empty' payload.json)
+        TAG=$(jq -r '
+          .tag
+          // .alert.alert.deployment.containers[0].image.name.tag
+          // .alert.deployment.containers[0].image.name.tag
+          // .alert.image.name.tag
           // empty' payload.json)
         if [ -z "$IMAGE" ]; then
           echo "No image found in payload" >&2
