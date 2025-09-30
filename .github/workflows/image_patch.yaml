@@ -45,6 +45,7 @@ jobs:
           exit 1
         fi
         echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+        echo "TAG=$TAG" >> $GITHUB_ENV
         echo "Extracted image: $IMAGE"
 
     - name: Log in to the Container registry
