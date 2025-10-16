@@ -4,11 +4,8 @@ on:
   push:
     branches:
       - main
-    paths:
-      - '!helm-chart/**'
-      - 'Dockerfile'
-      - 'app.py'
-      - 'requirements.txt'
+    path-ignore:
+      - 'helm-chart/**'
   workflow_dispatch:
 
 jobs:
