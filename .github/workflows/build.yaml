@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - '!helm-chart/**'
+      - 'Dockerfile'
+      - 'app.py'
+      - 'requirements.txt'
   workflow_dispatch:
 
 jobs:
