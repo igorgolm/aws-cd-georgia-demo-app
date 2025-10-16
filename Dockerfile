@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM python:3.10-alpine3.13
+FROM python:3.12-bullseye
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 COPY . .
 
 # Use a non-root user for security
-RUN addgroup -S appuser && adduser -S appuser -G appuser
+RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8080
