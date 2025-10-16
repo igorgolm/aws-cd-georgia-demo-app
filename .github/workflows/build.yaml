@@ -1,4 +1,4 @@
-name: Build and push
+name: Build and push image
 
 on:
   push:
@@ -6,9 +6,10 @@ on:
       - main
     paths:
       - '!helm-chart/**'
+  workflow_dispatch:
 
 jobs:
-  build:
+  build_image:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -32,4 +33,4 @@ jobs:
       with:
         push: true
         platforms: linux/amd64,linux/arm64
-        tags: ghcr.io/igorgolm/aws-cd-georgia-demo-app:${{ github.sha }}
+        tags: ghcr.io/${{ github.repository_owner }}/aws-cd-georgia-demo-app:${{ github.sha }}
