@@ -2,7 +2,7 @@ deployment:
   replicas: 1
   image:
     repository: ghcr.io/igorgolm/aws-cd-georgia-demo-app ## !! Update this to your image repository ##
-    tag: 9e7f94ab66dca5e8149c92d5a716d5904b8d8d37 ## !! Update this to your image tag ##
+    tag: c46a24c69d386f04e537f51afaec04e195a8e443 ## !! Update this to your image tag ##
   imagePullPolicy: IfNotPresent
   serviceAccount: default
   resources:
