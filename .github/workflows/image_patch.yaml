@@ -4,9 +4,6 @@ on:
   repository_dispatch:
     types: [ stackrox_copa ]
 
-env:
-  REGISTRY: ghcr.io/igorgolm
-
 jobs:
   image_patch_amd64:
     name: image_patch
@@ -75,6 +72,7 @@ jobs:
 
     - name: Run Copacetic patch
       id: copa
+      if: steps.vuln_count.outputs.vuln_count != '0'
       uses: project-copacetic/copa-action@v1.2.1
       with:
         image: ${{ env.IMAGE }}
