@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM python:3.12-bullseye
+FROM python:3.10-alpine3.13
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -22,12 +22,10 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 COPY . .
 
 # Use a non-root user for security
-RUN useradd -m appuser && chown -R appuser:appuser /app
+RUN addgroup -S appuser && adduser -S appuser -G appuser
 USER appuser
 
 EXPOSE 8080
 
 # Gunicorn entrypoint
 CMD ["sh","-lc","gunicorn -w ${GUNICORN_WORKERS} -k gthread --threads ${GUNICORN_THREADS} -b 0.0.0.0:${PORT} app:app"]
-
-
